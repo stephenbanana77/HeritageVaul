@@ -1,7 +1,15 @@
 const router = require('express').Router();
 const db = require('../config/db');
+const fs = require('fs');
+const path = require('path');
 const { authenticate } = require('../middleware/auth');
 const { writeAuditLog } = require('../middleware/audit');
+
+function deleteImageFile(imageUrl) {
+  if (!imageUrl) return;
+  const filePath = path.join(__dirname, '..', imageUrl);
+  fs.unlink(filePath, () => {});
+}
 
 router.use(authenticate);
 
@@ -55,7 +63,7 @@ router.get('/:id', async (req, res) => {
 router.post('/', async (req, res) => {
   const fields = ['name','category_id','era','origin','material','dimensions','weight',
     'condition_status','acquisition_date','acquisition_method','donor_id','current_hall_id',
-    'storage_location','appraised_value','description','image_url','is_on_display'];
+    'storage_location','appraised_value','description','story','image_url','is_on_display'];
   const values = fields.map(f => req.body[f] ?? null);
   const [result] = await db.query(
     `INSERT INTO artifacts (${fields.join(',')}) VALUES (${fields.map(() => '?').join(',')})`,
@@ -67,12 +75,16 @@ router.post('/', async (req, res) => {
 
 // 修改
 router.put('/:id', async (req, res) => {
+  const [[old]] = await db.query('SELECT image_url FROM artifacts WHERE artifact_id = ?', [req.params.id]);
   const fields = ['name','category_id','era','origin','material','dimensions','weight',
     'condition_status','acquisition_date','acquisition_method','donor_id','current_hall_id',
-    'storage_location','appraised_value','description','image_url','is_on_display'];
+    'storage_location','appraised_value','description','story','image_url','is_on_display'];
   const sets = fields.map(f => `${f} = ?`).join(', ');
   const values = fields.map(f => req.body[f] ?? null);
   await db.query(`UPDATE artifacts SET ${sets} WHERE artifact_id = ?`, [...values, req.params.id]);
+  if (old?.image_url && old.image_url !== (req.body.image_url ?? null)) {
+    deleteImageFile(old.image_url);
+  }
   await writeAuditLog(req, 'UPDATE', 'artifacts', req.params.id, req.body.name);
   res.json({ message: '藏品更新成功' });
 });
@@ -83,8 +95,9 @@ router.delete('/:id', async (req, res) => {
     "SELECT loan_id FROM loans WHERE artifact_id = ? AND status IN ('借出中','逾期')", [req.params.id]
   );
   if (loans.length) return res.status(400).json({ message: '该藏品有未归还的借展记录，不能删除' });
-  const [[artifact]] = await db.query('SELECT name FROM artifacts WHERE artifact_id = ?', [req.params.id]);
+  const [[artifact]] = await db.query('SELECT name, image_url FROM artifacts WHERE artifact_id = ?', [req.params.id]);
   await db.query('DELETE FROM artifacts WHERE artifact_id = ?', [req.params.id]);
+  deleteImageFile(artifact?.image_url);
   await writeAuditLog(req, 'DELETE', 'artifacts', req.params.id, artifact?.name || '');
   res.json({ message: '藏品删除成功' });
 });

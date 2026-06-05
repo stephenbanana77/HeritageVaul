@@ -3,7 +3,7 @@ import { Layout, Menu, Avatar, Dropdown, Button, Modal, Descriptions, message, T
 import {
   DashboardOutlined, PictureOutlined, TeamOutlined, BankOutlined,
   CalendarOutlined, SwapOutlined, BarChartOutlined, TagsOutlined,
-  QuestionCircleOutlined, UserOutlined, LogoutOutlined, AuditOutlined,
+  QuestionCircleOutlined, UserOutlined, LogoutOutlined, AuditOutlined, GlobalOutlined,
 } from '@ant-design/icons';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { getUser, clearAuth, isAdmin } from '../../utils/auth';
@@ -20,6 +20,7 @@ const navItems = [
   { key: 'loans',       icon: <SwapOutlined />,       label: '借展管理' },
   { key: 'reports',     icon: <BarChartOutlined />,   label: '统计报表' },
   { key: 'categories',  icon: <TagsOutlined />,       label: '分类管理' },
+  { key: 'gallery',     icon: <GlobalOutlined />,         label: '公众展示页', external: true },
   { key: 'help-admin',  icon: <QuestionCircleOutlined />, label: '帮助管理', adminOnly: true },
   { key: 'users',       icon: <UserOutlined />,       label: '用户管理', adminOnly: true },
   { key: 'auditlog',    icon: <AuditOutlined />,      label: '操作日志', adminOnly: true },
@@ -63,6 +64,12 @@ export default function AppLayout() {
     .filter(i => !i.adminOnly || isAdmin())
     .map(({ key, icon, label }) => ({ key, icon, label }));
 
+  const handleMenuClick = ({ key }) => {
+    const item = navItems.find(i => i.key === key);
+    if (item?.external) { window.open(`/${key}`, '_blank'); }
+    else navigate(`/${key}`);
+  };
+
   return (
     <Layout style={{ minHeight: '100vh' }}>
       <Sider width={220} theme="dark"
@@ -77,7 +84,7 @@ export default function AppLayout() {
           mode="inline"
           selectedKeys={[currentModule]}
           items={menuItems}
-          onClick={({ key }) => navigate(`/${key}`)}
+          onClick={handleMenuClick}
           style={{ background: 'transparent', border: 'none' }}
         />
       </Sider>

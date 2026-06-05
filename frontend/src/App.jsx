@@ -14,6 +14,7 @@ import Categories from './pages/Categories';
 import HelpAdmin from './pages/Help';
 import Users from './pages/Users';
 import AuditLog from './pages/AuditLog';
+import Gallery from './pages/Gallery';
 
 function RequireAuth({ children }) {
   return getToken() ? children : <Navigate to="/login" replace />;
@@ -24,6 +25,7 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={<Login />} />
+        <Route path="/gallery" element={<Gallery />} />
         <Route path="/" element={<RequireAuth><Layout /></RequireAuth>}>
           <Route index element={<Navigate to="/dashboard" replace />} />
           <Route path="dashboard"   element={<Dashboard />} />

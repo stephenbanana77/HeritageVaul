@@ -95,3 +95,8 @@ export const getMe     = () => api.get('/auth/me');
 
 // ---- 审计日志 ----
 export const getAuditLogs = p => api.get('/auditlogs', { params: p });
+
+// ---- 公众展示 ----
+export const getPublicArtifacts  = p => api.get('/public/artifacts', { params: p });
+export const getPublicArtifact   = id => api.get(`/public/artifacts/${id}`);
+export const getPublicCategories = () => api.get('/public/categories');

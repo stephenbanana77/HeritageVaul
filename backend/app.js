@@ -4,6 +4,13 @@ const express = require('express');
 const cors = require('cors');
 const app = express();
 
+process.on('unhandledRejection', (err) => {
+  console.error('[unhandledRejection]', err?.message || err);
+});
+process.on('uncaughtException', (err) => {
+  console.error('[uncaughtException]', err?.message || err);
+});
+
 app.use(cors({ origin: 'http://localhost:5173', credentials: true }));
 app.use(express.json());
 
@@ -22,6 +29,8 @@ app.use('/api/help',        require('./routes/help'));
 app.use('/api/users',       require('./routes/users'));
 app.use('/api/upload',      require('./routes/upload'));
 app.use('/api/auditlogs',   require('./routes/auditlogs'));
+app.use('/api/public',      require('./routes/public'));
+app.use('/api/public/chat', require('./routes/chat'));
 
 app.use((err, req, res, next) => {
   console.error(err);
